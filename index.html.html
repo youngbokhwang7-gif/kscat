@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KSCAT 관리">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KSCAT · 중고 건설기계 스마트 관리 시스템</title>
+
+<link rel="apple-touch-icon" href="https://img.icons8.com/fluent/512/excavator.png">
+
+<style>
+  :root{
+    --bg:#0b0f19;
+    --panel:#121826;
+    --panel-2:#172033;
+    --line:#22314d;
+    --ink:#f1f5f9;
+    --ink-dim:#94a3b8;
+    --ink-faint:#64748b;
+    --accent:#ff9f43;
+    --accent-deep:#ee5a24;
+    --good:#10b981;
+    --bad:#ef4444;
+    --font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font)}
+  body{
+    color:var(--ink);background:var(--bg);
+    overflow-x:hidden;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 100px}
+  
+  /* 헤더 */
+  .brand{font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;text-transform:uppercase}
+  h1{font-size:24px;font-weight:800;margin:4px 0 2px;letter-spacing:-0.5px}
+  .lead{font-size:12.5px;color:var(--ink-dim);margin-bottom:15px}
+  
+  /* 탭 메뉴 */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+  .tab{background:var(--panel);border:1px solid var(--line);padding:12px;text-align:center;border-radius:12px;cursor:pointer;font-weight:700;color:var(--ink-dim);transition:0.15s}
+  .tab.on{background:var(--panel-2);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  
+  /* 섹션 제어 */
+  .section{display:none}
+  .section.show{display:block}
+  
+  /* 폼 폼 스타일 */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+  .card h2{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--ink);display:flex;align-items:center;gap:6px}
+  .form-group{margin-bottom:12px}
+  .form-group label{display:block;font-size:11.5px;color:var(--ink-dim);margin-bottom:5px;font-weight:600}
+  .form-group input, .form-group select, .form-group textarea{
+    width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:11px 12px;border-radius:8px;font-size:14px;outline:none
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus{border-color:var(--accent)}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  
+  /* 사진 등록 박스 */
+  .photo-drop{border:1.5px dashed var(--line);background:var(--bg);border-radius:10px;padding:20px;text-align:center;cursor:pointer;margin-top:5px}
+  .photo-drop span{font-size:13px;color:var(--ink-faint)}
+  .photo-preview{display:flex;gap:8px;margin-top:10px;overflow-x:auto}
+  .photo-preview img{width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+  
+  /* 저장 버튼 */
+  .btn-submit{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+  
+  /* 장비 리스트 및 검색 */
+  .search-box{position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:10;margin-bottom:12px}
+  .search-box input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:12px 14px;border-radius:11px;font-size:14px;outline:none}
+  
+  .eq-item{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;position:relative}
+  .eq-item .badge{position:absolute;top:14px;right:14px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+  .eq-item .badge.in{background:rgba(16,185,129,0.15);color:var(--good)}
+  .eq-item .badge.out{background:rgba(239,68,68,0.15);color:var(--bad)}
+  .eq-title{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:4px}
+  .eq-meta{font-size:12.5px;color:var(--ink-dim);display:flex;gap:12px;margin-bottom:6px}
+  .eq-cost{font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid #1e293b;padding-top:6px;margin-top:4px}
+  
+  /* 원가/마진 안내 뱃지 */
+  .margin-info{display:flex;justify-content:space-between;background:var(--panel-2);padding:10px 12px;border-radius:8px;font-size:12px;margin-top:10px}
+  .margin-info span.plus {color:var(--good);font-weight:bold}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="brand">KSCAT 기계매매</div>
+  <h1>장비 스마트 관리창</h1>
+  <div class="lead">야적장 입고 장비 등록 · 정비 원가 및 서류 디지털 보관시스템</div>
+  
+  <div class="tabs">
+    <div class="tab on" data-target="sec-list">장비 보관함 (<span id="eq-count">0</span>)</div>
+    <div class="tab" data-target="sec-reg">신규 장비 입고</div>
+  </div>
+
+  <div class="section show" id="sec-list">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="🔍 규격, 제조사 또는 장비번호 검색...">
+    </div>
+    <div id="equipment-container">
+      </div>
+  </div>
+
+  <div class="section" id="sec-reg">
+    <form id="regForm" onsubmit="saveEquipment(event)">
+      
+      <div class="card">
+        <h2>🚜 기본 제원 정보</h2>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>제조사</label>
+            <select id="brand_name" required>
+              <option>두산 (디벨론)</option><option>현대</option><option>볼보</option><option>얀마</option><option>구보타</option><option>기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>모델명 / 규격</label>
+            <input type="text" id="model_name" placeholder="예: DX140W, 02공이" required>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>연식 (년형)</label>
+            <input type="number" id="year_model" value="2020" min="1990" max="2030" required>
+          </div>
+          <div class="form-group">
+            <label>가동 시간 (Hrs)</label>
+            <input type="number" id="hours_meter" placeholder="시간메타값 입력" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>자체 관리번호 / 차대번호</label>
+          <input type="text" id="serial_no" placeholder="야적장 넘버링 혹은 차대번호 고유값" required>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>💰 원가 및 상품화 배정</h2>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>매입 금액 (만원)</label>
+            <input type="number" id="buy_price" value="0" oninput="calcMarginHint()">
+          </div>
+          <div class="form-group">
+            <label>정비 / 도색비 (만원)</label>
+            <input type="number" id="repair_price" value="0" oninput="calcMarginHint()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>희망 판매가 (만원)</label>
+          <input type="number" id="sell_price" value="0" oninput="calcMarginHint()">
+        </div>
+        
+        <div class="margin-info">
+          <span>예상 원가 합계: <b id="total-cost-hint">0</b>만원</span>
+          <span>예상 마진익: <span id="margin-hint" class="plus">0</span>만원</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📸 외관 및 등록증 서류철 (최대 3장)</h2>
+        <div class="photo-drop" onclick="document.getElementById('photoInput').click()">
+          <span>📷 여기를 터치하여 스마트폰 카메라/갤러리 연동</span>
+          <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="previewPhotos(this)">
+        </div>
+        <div class="photo-preview" id="photo-preview-zone"></div>
+      </div>
+
+      <button type="submit" class="btn-submit">현장 장비 입고 데이터 저장</button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+// 데이터 배열 세션 정의 (로컬 스토리지 자동 연동)
+let DB = JSON.parse(localStorage.getItem('KSCAT_DB')) || [
+  { brand: "두산 (디벨론)", model: "DX140W-5 (06휠)", year: 2019, hours: 6800, serial: "KS-0842", buy: 5400, repair: 350, sell: 6500, photos: [], status: "입고보관" },
+  { brand: "볼보", model: "EC60E (02궤도)", year: 2021, hours: 4200, serial: "KS-0911", buy: 3200, repair: 120, sell: 3900, photos: [], status: "입고보관" }
+];
+
+// 탭 전환 엔진
+document.querySelectorAll('.tabs .tab').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tabs .tab').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('show'));
+    btn.classList.add('on');
+    document.getElementById(btn.dataset.target).classList.add('show');
+  };
+});
+
+// 사진 프리뷰 제어 리더
+let currentBase64Photos = [];
+function previewPhotos(input) {
+  const zone = document.getElementById('photo-preview-zone');
+  zone.innerHTML = ""; currentBase64Photos = [];
+  const files = Array.from(input.files).slice(0, 3);
+  
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      currentBase64Photos.push(e.target.result);
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      zone.appendChild(img);
+    }
+    reader.readAsDataURL(file);
+  });
+}
+
+// 실시간 원가/마진 예측 힌트 계산식
+function calcMarginHint() {
+  const buy = parseFloat(document.getElementById('buy_price').value) || 0;
+  const repair = parseFloat(document.getElementById('repair_price').value) || 0;
+  const sell = parseFloat(document.getElementById('sell_price').value) || 0;
+  
+  const cost = buy + repair;
+  const margin = sell - cost;
+  
+  document.getElementById('total-cost-hint').textContent = cost.toLocaleString();
+  document.getElementById('margin-hint').textContent = margin.toLocaleString();
+}
+
+// 장비 저장 액션
+function saveEquipment(e) {
+  e.preventDefault();
+  
+  const newObj = {
+    brand: document.getElementById('brand_name').value,
+    model: document.getElementById('model_name').value,
+    year: parseInt(document.getElementById('year_model').value) || 2026,
+    hours: parseInt(document.getElementById('hours_meter').value) || 0,
+    serial: document.getElementById('serial_no').value,
+    buy: parseFloat(document.getElementById('buy_price').value) || 0,
+    repair: parseFloat(document.getElementById('repair_price').value) || 0,
+    sell: parseFloat(document.getElementById('sell_price').value) || 0,
+    photos: currentBase64Photos,
+    status: "입고보관"
+  };
+  
+  DB.unshift(newObj);
+  localStorage.setItem('KSCAT_DB', JSON.stringify(DB));
+  
+  document.getElementById('regForm').reset();
+  document.getElementById('photo-preview-zone').innerHTML = "";
+  
+  alert("⚙️ 현장 장비가 마스터 파일에 정상 수록되었습니다!");
+  renderList();
+  
+  // 리스트 탭으로 강제 즉시 복귀
+  document.querySelector('[data-target="sec-list"]').click();
+}
+
+// 리스트 드로잉 컴포넌트 엔진
+function renderList(filterText = "") {
+  const container = document.getElementById('equipment-container');
+  container.innerHTML = "";
+  
+  let count = 0;
+  DB.forEach((item, index) => {
+    // 필터링 적용 검사
+    if(filterText && !item.model.toLowerCase().includes(filterText.toLowerCase()) && !item.brand.toLowerCase().includes(filterText.toLowerCase()) && !item.serial.toLowerCase().includes(filterText.toLowerCase())) {
+      return;
+    }
+    count++;
+    
+    const div = document.createElement('div');
+    div.className = "eq-item";
+    
+    // 사진이 있을 경우 배경 슬라이트 혹은 정보 제공 확장 가능
+    const totalCost = item.buy + item.repair;
+    const expMargin = item.sell - totalCost;
+    
+    div.innerHTML = `
+      <span class="badge in">${item.status}</span>
+      <div class="eq-title">${item.brand} ${item.model}</div>
+      <div class="eq-meta">
+        <span>🗓️ ${item.year}년식</span>
+        <span>⏱️ ${item.hours.toLocaleString()} Hrs</span>
+        <span>🆔 ${item.serial}</span>
+      </div>
+      <div class="eq-cost">
+        판매가: ${item.sell}만원 <span style="font-size:11px; color:var(--ink-faint); font-weight:normal; margin-left:6px;">(원가:${totalCost}만 / 마진:+${expMargin}만)</span>
+      </div>
+    `;
+    
+    // 롱탭 또는 클릭 시 상세 제어나 삭제 유도 연동 가능
+    div.onclick = () => {
+      if(confirm(`[${item.serial}] 장비를 리스트에서 입고 취소(삭제) 처리할까요?`)) {
+        DB.splice(index, 1);
+        localStorage.setItem('KSCAT_DB', JSON.stringify(DB));
+        renderList(document.getElementById('searchInput').value);
+      }
+    };
+    
+    container.appendChild(div);
+  });
+  
+  document.getElementById('eq-count').textContent = count;
+}
+
+// 검색 이벤트 실시간 가로채기 바인딩
+document.getElementById('searchInput').oninput = (e) => {
+  renderList(e.target.value);
+};
+
+// 최초 마운트 실행 트리거
+renderList();
+</script>
+</body>
+</html>
